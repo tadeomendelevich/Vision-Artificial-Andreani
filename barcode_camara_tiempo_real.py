@@ -16,12 +16,39 @@ import csv
 import json
 from datetime import datetime
 
+import base64
+import requests
 import pandas as pd
 import paho.mqtt.client as mqtt
 
 sys.stderr = open(os.devnull, 'w')
 from pyzbar import pyzbar
 sys.stderr = sys.__stderr__
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ENVIO A SERVIDOR WEB (app.py)
+# ══════════════════════════════════════════════════════════════════════════════
+SERVER_URL  = "http://localhost:5000"
+web_activa  = False
+
+def verificar_servidor():
+    global web_activa
+    try:
+        requests.get(SERVER_URL, timeout=2)
+        web_activa = True
+        print("[WEB] Servidor web detectado en", SERVER_URL)
+    except Exception:
+        print("[WEB] Servidor web no disponible (correr app.py primero)")
+
+threading.Thread(target=verificar_servidor, daemon=True).start()
+
+def enviar_web(endpoint, data):
+    if not web_activa:
+        return
+    try:
+        requests.post(f"{SERVER_URL}/{endpoint}", json=data, timeout=0.1)
+    except Exception:
+        pass
 
 # ══════════════════════════════════════════════════════════════════════════════
 # BASE DE DATOS (Excel)
@@ -179,6 +206,11 @@ def registrar_deteccion(tipo, codigo):
 
     estado = "EN DB" if en_db else "DESCONOCIDO"
     print(f"[SCAN] {tipo}: {codigo} -> {estado} | {nombre_prod}")
+
+    threading.Thread(target=enviar_web, args=('push_deteccion', {
+        "timestamp": ts, "codigo": codigo, "tipo": tipo,
+        "en_db": en_db, "producto": nombre_prod, "categoria": categoria,
+    }), daemon=True).start()
 
     def limpiar():
         time.sleep(2)
@@ -439,6 +471,13 @@ while True:
 
     ventana = np.hstack([camara, panel])
     cv2.imshow(f"Barcode Cam {cam_idx} - [q] salir", ventana)
+
+    if web_activa and frame_num % 3 == 0:  # ~10 fps a la web
+        ok, buf = cv2.imencode('.jpg', camara, [cv2.IMWRITE_JPEG_QUALITY, 65])
+        if ok:
+            b64 = base64.b64encode(buf).decode('utf-8')
+            threading.Thread(target=enviar_web, args=('push_frame', {'img': b64}),
+                             daemon=True).start()
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
