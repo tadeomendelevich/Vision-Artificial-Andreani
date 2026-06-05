@@ -18,6 +18,7 @@ from datetime import datetime
 
 import base64
 import re
+import queue
 import requests
 import pandas as pd
 import paho.mqtt.client as mqtt
@@ -30,10 +31,11 @@ import easyocr
 ocr_reader = easyocr.Reader(['es', 'en'], gpu=False, verbose=False)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ENVIO A SERVIDOR WEB (app.py)
+# ENVIO A SERVIDOR WEB — un solo hilo con cola, no bloquea deteccion
 # ══════════════════════════════════════════════════════════════════════════════
-SERVER_URL  = "http://localhost:5000"
-web_activa  = False
+SERVER_URL = "http://localhost:5000"
+web_activa = False
+cola_web   = queue.Queue(maxsize=5)
 
 def verificar_servidor():
     global web_activa
@@ -46,12 +48,22 @@ def verificar_servidor():
 
 threading.Thread(target=verificar_servidor, daemon=True).start()
 
+def hilo_web():
+    while True:
+        endpoint, data = cola_web.get()
+        try:
+            requests.post(f"{SERVER_URL}/{endpoint}", json=data, timeout=0.5)
+        except Exception:
+            pass
+
+threading.Thread(target=hilo_web, daemon=True).start()
+
 def enviar_web(endpoint, data):
     if not web_activa:
         return
     try:
-        requests.post(f"{SERVER_URL}/{endpoint}", json=data, timeout=0.1)
-    except Exception:
+        cola_web.put_nowait((endpoint, data))
+    except queue.Full:
         pass
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -211,10 +223,10 @@ def registrar_deteccion(tipo, codigo):
     estado = "EN DB" if en_db else "DESCONOCIDO"
     print(f"[SCAN] {tipo}: {codigo} -> {estado} | {nombre_prod}")
 
-    threading.Thread(target=enviar_web, args=('push_deteccion', {
+    enviar_web('push_deteccion', {
         "timestamp": ts, "codigo": codigo, "tipo": tipo,
         "en_db": en_db, "producto": nombre_prod, "categoria": categoria,
-    }), daemon=True).start()
+    })
 
     def limpiar():
         time.sleep(2)
@@ -493,8 +505,7 @@ while True:
         ok, buf = cv2.imencode('.jpg', camara, [cv2.IMWRITE_JPEG_QUALITY, 65])
         if ok:
             b64 = base64.b64encode(buf).decode('utf-8')
-            threading.Thread(target=enviar_web, args=('push_frame', {'img': b64}),
-                             daemon=True).start()
+            enviar_web('push_frame', {'img': b64})
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
