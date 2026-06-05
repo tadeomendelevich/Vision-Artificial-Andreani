@@ -17,6 +17,7 @@ import json
 from datetime import datetime
 
 import base64
+import re
 import requests
 import pandas as pd
 import paho.mqtt.client as mqtt
@@ -24,6 +25,9 @@ import paho.mqtt.client as mqtt
 sys.stderr = open(os.devnull, 'w')
 from pyzbar import pyzbar
 sys.stderr = sys.__stderr__
+
+import easyocr
+ocr_reader = easyocr.Reader(['es', 'en'], gpu=False, verbose=False)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ENVIO A SERVIDOR WEB (app.py)
@@ -305,6 +309,19 @@ def hilo_decode():
             intentar(cv2.adaptiveThreshold(
                 mejorada, 255,
                 cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 15, 4))
+
+        # OCR para leer CP (codigo postal de 4 digitos) si no se encontro barcode
+        if not encontrados:
+            try:
+                resultados_ocr = ocr_reader.readtext(mejorada, detail=0, paragraph=False)
+                texto_completo = ' '.join(resultados_ocr)
+                # busca patron CP seguido de 4 digitos, o simplemente 4 digitos solos
+                match = re.search(r'\bCP\s*(\d{4})\b|\b(\d{4})\b', texto_completo, re.IGNORECASE)
+                if match:
+                    cp = match.group(1) or match.group(2)
+                    registrar_deteccion('CP-OCR', cp)
+            except Exception:
+                pass
 
         with lock_res:
             if encontrados:
