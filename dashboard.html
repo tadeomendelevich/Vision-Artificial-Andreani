@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lector de Paquetes Andreani</title>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+  :root {
+    --andreani: #F47920;
+    --andreani-dark: #C85F10;
+    --andreani-light: #FFF0E6;
+    --bg: #0F0F0F;
+    --surface: #1A1A1A;
+    --surface2: #242424;
+    --border: #2E2E2E;
+    --text: #F0F0F0;
+    --text-muted: #888;
+    --green: #2ECC71;
+    --blue: #3498DB;
+    --red: #E74C3C;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #1A1A1A 0%, #111 100%);
+    border-bottom: 2px solid var(--andreani);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+
+  .header-left { display: flex; align-items: center; gap: 12px; }
+
+  .logo-box {
+    background: var(--andreani);
+    border-radius: 10px;
+    width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 0 12px rgba(244,121,32,0.4);
+  }
+
+  .header-title { font-size: 1.1rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .header-sub   { font-size: 0.65rem; color: var(--andreani); letter-spacing: 1.5px; text-transform: uppercase; }
+
+  #conn-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2); border-radius: 20px;
+    padding: 6px 12px; font-size: 0.72rem; font-weight: 600;
+    border: 1px solid var(--border); transition: all 0.3s;
+  }
+  #conn-badge.on  { border-color: var(--green); color: var(--green); }
+  #conn-badge.off { border-color: var(--red);   color: var(--red);   }
+  #conn-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  #conn-badge.on  #conn-dot { box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* ── LAYOUT ── */
+  main { padding: 16px; max-width: 960px; margin: 0 auto; }
+
+  /* ── CAMARA ── */
+  .cam-wrap {
+    border-radius: 14px; overflow: hidden;
+    background: #000; margin-bottom: 16px;
+    border: 1px solid var(--border);
+    position: relative;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  }
+  .cam-wrap img { width: 100%; display: block; border-radius: 14px; }
+  .cam-label {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(0,0,0,0.65); border-radius: 6px;
+    padding: 4px 10px; font-size: 0.65rem; font-weight: 600;
+    color: var(--andreani); letter-spacing: 1px; text-transform: uppercase;
+    backdrop-filter: blur(4px); border: 1px solid rgba(244,121,32,0.3);
+  }
+
+  /* ── METRICAS ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  @media(max-width:600px){ .metrics { grid-template-columns: repeat(2,1fr); } }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 12px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .metric-card:hover { transform: translateY(-2px); }
+  .metric-card .m-val {
+    font-size: 2rem; font-weight: 800; line-height: 1;
+    margin-bottom: 4px;
+  }
+  .metric-card .m-lbl { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+  .metric-card.orange .m-val { color: var(--andreani); }
+  .metric-card.green  .m-val { color: var(--green); }
+  .metric-card.blue   .m-val { color: var(--blue); }
+  .metric-card.red    .m-val { color: var(--red); }
+
+  /* ── ULTIMO DETECTADO ── */
+  #ultimo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 16px;
+    transition: border-color 0.4s;
+  }
+  #ultimo-card.en-db    { border-color: var(--green); }
+  #ultimo-card.no-en-db { border-color: var(--blue);  }
+
+  .sec-title {
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sec-title::before {
+    content:''; width:3px; height:12px; border-radius:2px;
+    background: var(--andreani); display:inline-block;
+  }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 0.75rem; font-weight: 700; margin-bottom: 10px;
+  }
+  .status-badge.en-db    { background: rgba(46,204,113,0.15); color: var(--green);  border: 1px solid rgba(46,204,113,0.3); }
+  .status-badge.no-en-db { background: rgba(52,152,219,0.15); color: var(--blue);   border: 1px solid rgba(52,152,219,0.3); }
+
+  .tipo-tag {
+    display: inline-block; background: rgba(244,121,32,0.15);
+    color: var(--andreani); border: 1px solid rgba(244,121,32,0.3);
+    border-radius: 6px; padding: 2px 10px; font-size: 0.68rem;
+    font-weight: 600; margin-bottom: 8px;
+  }
+
+  #u-codigo {
+    font-size: 1.8rem; font-weight: 800; color: var(--text);
+    word-break: break-all; line-height: 1.1; margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  #u-nombre { font-size: 0.9rem; color: var(--text-muted); }
+  #u-hora   { font-size: 0.68rem; color: #555; margin-top: 6px; }
+
+  /* ── HISTORIAL ── */
+  #historial-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+  }
+
+  #historial { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+
+  .entry {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface2); border-radius: 10px;
+    padding: 10px 14px; border: 1px solid var(--border);
+    transition: background 0.2s;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
+
+  .entry:hover { background: #2c2c2c; }
+
+  .entry-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .entry-dot.en-db    { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .entry-dot.no-en-db { background: var(--blue);  box-shadow: 0 0 6px var(--blue);  }
+
+  .entry-info { flex: 1; min-width: 0; }
+  .entry-cod  { font-size: 0.88rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry-meta { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
+
+  .entry-hora {
+    font-size: 0.65rem; color: #555; font-variant-numeric: tabular-nums;
+    white-space: nowrap; flex-shrink: 0;
+  }
+
+  .empty-state { text-align: center; padding: 32px; color: #555; font-size: 0.85rem; }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 20px;
+    font-size: 0.65rem; color: #444;
+    border-top: 1px solid var(--border); margin-top: 16px;
+  }
+  footer span { color: var(--andreani); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-box">📦</div>
+    <div>
+      <div class="header-title">Lector de Paquetes Andreani</div>
+      <div class="header-sub">Sistemas Mecatrónicos II · UNER</div>
+    </div>
+  </div>
+  <div id="conn-badge" class="off">
+    <div id="conn-dot"></div>
+    <span id="conn-txt">Desconectado</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- Camara -->
+  <div class="cam-wrap">
+    <img id="cam-img" src="" alt="Camara en vivo" style="background:#000;min-height:200px;">
+    <div class="cam-label">● EN VIVO</div>
+  </div>
+
+  <!-- Metricas -->
+  <div class="metrics">
+    <div class="metric-card orange">
+      <div class="m-val" id="c-total">0</div>
+      <div class="m-lbl">Total escaneados</div>
+    </div>
+    <div class="metric-card green">
+      <div class="m-val" id="c-endb">0</div>
+      <div class="m-lbl">En base de datos</div>
+    </div>
+    <div class="metric-card blue">
+      <div class="m-val" id="c-desc">0</div>
+      <div class="m-lbl">Desconocidos</div>
+    </div>
+    <div class="metric-card red">
+      <div class="m-val" id="c-pct">—</div>
+      <div class="m-lbl">% Reconocidos</div>
+    </div>
+  </div>
+
+  <!-- Piston destino -->
+  <div id="piston-card" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px;">
+    <div class="sec-title">Destino del paquete</div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div id="piston-box" style="border-radius:12px;padding:14px 24px;font-size:1.3rem;font-weight:800;background:var(--surface2);color:var(--text-muted);border:2px solid var(--border);transition:all 0.4s;min-width:160px;text-align:center;">
+        Sin datos
+      </div>
+      <div>
+        <div id="piston-cp"     style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">CP: —</div>
+        <div id="piston-nombre" style="font-size:1rem;font-weight:600;color:var(--text);">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ultimo detectado -->
+  <div id="ultimo-card">
+    <div class="sec-title">Último detectado</div>
+    <div id="u-badge" class="status-badge" style="display:none"></div>
+    <div id="u-tipo"  class="tipo-tag"     style="display:none"></div><br id="u-br" style="display:none">
+    <div id="u-codigo">—</div>
+    <div id="u-nombre"></div>
+    <div id="u-hora"></div>
+  </div>
+
+  <!-- Historial -->
+  <div id="historial-card">
+    <div class="sec-title">Historial de escaneos</div>
+    <div id="historial">
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        Esperando detecciones...
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <span>Andreani</span> · Lector de Códigos de Barras · Visión Artificial 2026
+</footer>
+
+<script>
+let total = 0, enDb = 0, desc = 0;
+const historial = [];
+
+const socket = io({ transports: ['websocket', 'polling'] });
+
+socket.on('frame', (data) => {
+  document.getElementById('cam-img').src = 'data:image/jpeg;base64,' + data.img;
+});
+
+socket.on('connect', () => {
+  const b = document.getElementById('conn-badge');
+  b.className = 'on';
+  document.getElementById('conn-txt').textContent = 'Conectado';
+});
+
+socket.on('disconnect', () => {
+  const b = document.getElementById('conn-badge');
+  b.className = 'off';
+  document.getElementById('conn-txt').textContent = 'Desconectado';
+});
+
+socket.on('deteccion', (data) => {
+  total++;
+  if (data.en_db) enDb++; else desc++;
+
+  document.getElementById('c-total').textContent = total;
+  document.getElementById('c-endb').textContent  = enDb;
+  document.getElementById('c-desc').textContent  = desc;
+  const pct = total > 0 ? Math.round(enDb / total * 100) : 0;
+  document.getElementById('c-pct').textContent = pct + '%';
+
+  // Ultimo detectado
+  const card  = document.getElementById('ultimo-card');
+  const badge = document.getElementById('u-badge');
+  const tipo  = document.getElementById('u-tipo');
+
+  card.className  = data.en_db ? 'en-db' : 'no-en-db';
+  badge.textContent = data.en_db ? '✓  EN BASE DE DATOS' : '✗  DESCONOCIDO';
+  badge.className   = 'status-badge ' + (data.en_db ? 'en-db' : 'no-en-db');
+  badge.style.display = 'inline-flex';
+
+  tipo.textContent   = data.tipo || '';
+  tipo.style.display = 'inline-block';
+  document.getElementById('u-br').style.display = 'inline';
+
+  document.getElementById('u-codigo').textContent = data.codigo  || '—';
+  document.getElementById('u-nombre').textContent = data.producto || '';
+  document.getElementById('u-hora').textContent   = data.timestamp ? '🕐 ' + data.timestamp : '';
+
+  // Piston
+  const pistonColors = { 1:'#2ECC71', 2:'#3498DB', 3:'#F47920', 4:'#E74C3C' };
+  const box = document.getElementById('piston-box');
+  if (data.piston) {
+    const col = pistonColors[data.piston] || '#888';
+    box.textContent   = `PISTÓN ${data.piston}`;
+    box.style.background   = col + '22';
+    box.style.color        = col;
+    box.style.borderColor  = col;
+    box.style.boxShadow    = `0 0 16px ${col}44`;
+    document.getElementById('piston-cp').textContent     = data.cp ? `CP: ${data.cp}` : 'CP: —';
+    document.getElementById('piston-nombre').textContent = data.piston_nombre || '';
+  }
+
+  // Historial
+  historial.unshift(data);
+  if (historial.length > 30) historial.pop();
+  renderHistorial();
+});
+
+function renderHistorial() {
+  const div = document.getElementById('historial');
+  if (!historial.length) {
+    div.innerHTML = '<div class="empty-state"><div class="icon">📭</div>Esperando detecciones...</div>';
+    return;
+  }
+  div.innerHTML = historial.map((e, i) => `
+    <div class="entry">
+      <div class="entry-dot ${e.en_db ? 'en-db' : 'no-en-db'}"></div>
+      <div class="entry-info">
+        <div class="entry-cod">${e.codigo}</div>
+        <div class="entry-meta">${e.tipo} · ${e.producto}</div>
+      </div>
+      <div class="entry-hora">${(e.timestamp||'').slice(11,19)}</div>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>

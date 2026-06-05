@@ -1,0 +1,485 @@
+\documentclass[11pt,a4paper]{article}
+
+% =========================
+% PAQUETES
+% =========================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usepackage{mdframed}
+\usepackage{titlesec}
+\usepackage{parskip}
+\usepackage{multicol}
+
+\usepackage{tcolorbox}
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{fancyhdr}
+\usepackage{ifthen}
+
+\tcbuselibrary{skins, breakable}
+
+% =========================
+% GEOMETRÍA
+% =========================
+\geometry{
+    left=2.2cm, right=2.2cm,
+    top=2.8cm, bottom=2.5cm,
+    headheight=1.5cm
+}
+
+% =========================
+% COLORES
+% =========================
+\definecolor{azulUNER}{RGB}{0, 60, 130}
+\definecolor{azulClaro}{RGB}{0, 100, 180}
+\definecolor{grisClaro}{RGB}{245, 247, 250}
+\definecolor{grisMedio}{RGB}{180, 190, 200}
+\definecolor{verdePro}{RGB}{34, 139, 34}
+\definecolor{rojoContra}{RGB}{180, 30, 30}
+\definecolor{amarilloEval}{RGB}{200, 150, 0}
+\definecolor{azulAccento}{RGB}{30, 90, 200}
+\definecolor{fondo1}{RGB}{230, 240, 255}
+\definecolor{fondo2}{RGB}{230, 248, 235}
+\definecolor{fondo3}{RGB}{245, 235, 255}
+
+% =========================
+% ENCABEZADO Y PIE
+% =========================
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[L]{%
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[azulUNER] (0, 0) rectangle (\paperwidth - 2cm, 0.9cm);
+    \node[anchor=west, white, font=\footnotesize\bfseries] at (0.2cm, 0.45cm)
+      {UNER · Ingeniería Mecatrónica · Análisis de Proyectos de Tesis};
+  \end{tikzpicture}
+}
+\fancyfoot[C]{\color{grisMedio}\footnotesize\thepage}
+
+% =========================
+% TÍTULOS DE SECCIÓN
+% =========================
+\titleformat{\section}
+  {\color{azulUNER}\large\bfseries}
+  {}
+  {0pt}
+  {\colorbox{azulUNER}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{\color{white}\hspace{0.3cm}#1}}}
+  [\vspace{2pt}]
+
+\titlespacing{\section}{0pt}{18pt}{10pt}
+
+\titleformat{\subsection}
+  {\color{azulClaro}\normalsize\bfseries}
+  {}
+  {0pt}
+  {#1}
+
+\titlespacing{\subsection}{0pt}{10pt}{4pt}
+
+% =========================
+% CAJAS PERSONALIZADAS
+% =========================
+
+% Caja de pros
+\tcbset{
+  probox/.style={
+    enhanced, breakable,
+    colback=fondo2, colframe=verdePro,
+    leftrule=3pt, toprule=0.5pt, bottomrule=0.5pt, rightrule=0.5pt,
+    fonttitle=\bfseries\small\color{verdePro},
+    title={✓ Ventajas},
+    before upper={\small},
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+  },
+  contrabox/.style={
+    enhanced, breakable,
+    colback=red!5, colframe=rojoContra,
+    leftrule=3pt, toprule=0.5pt, bottomrule=0.5pt, rightrule=0.5pt,
+    fonttitle=\bfseries\small\color{rojoContra},
+    title={⚠ Desafíos},
+    before upper={\small},
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+  },
+  evalbox/.style={
+    enhanced,
+    colback=fondo1, colframe=azulUNER,
+    leftrule=4pt, toprule=0.5pt, bottomrule=0.5pt, rightrule=0.5pt,
+    fonttitle=\bfseries\small\color{azulUNER},
+    title={► Evaluación preliminar},
+    before upper={\small},
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+  },
+  infobox/.style={
+    enhanced,
+    colback=grisClaro, colframe=grisMedio,
+    leftrule=3pt, toprule=0.5pt, bottomrule=0.5pt, rightrule=0.5pt,
+    before upper={\small},
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+  },
+  extbox/.style={
+    enhanced, breakable,
+    colback=fondo3, colframe=azulAccento,
+    leftrule=4pt, toprule=0.5pt, bottomrule=0.5pt, rightrule=0.5pt,
+    fonttitle=\bfseries\color{azulAccento},
+    title={+ Ampliación: Gemelo Digital},
+    left=8pt, right=8pt, top=6pt, bottom=6pt,
+  }
+}
+
+% =========================
+% HIPERLINKS
+% =========================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=azulClaro,
+    urlcolor=azulClaro,
+    pdfborder={0 0 0}
+}
+
+\setlist[itemize]{
+    leftmargin=1.4cm,
+    itemsep=1pt,
+    topsep=3pt
+}
+
+% =========================
+% DOCUMENTO
+% =========================
+\begin{document}
+
+% ---- PORTADA ----
+\begin{titlepage}
+\newgeometry{left=0cm, right=0cm, top=0cm, bottom=0cm}
+
+% Franja superior azul
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[azulUNER] (current page.north west) rectangle
+    ([yshift=-6cm] current page.north east);
+  \fill[azulClaro!40] (current page.south west) rectangle
+    ([yshift=1.8cm] current page.south east);
+\end{tikzpicture}
+
+\vspace*{1cm}
+
+% Logo y nombre institución
+\begin{center}
+  \color{white}
+
+  % -------------------------------------------------------
+  % LOGO: reemplazá "logo_uner.png" con tu archivo de logo
+  % Si no tenés el logo, podés comentar las tres líneas de
+  % \includegraphics y quedará solo el texto.
+  % -------------------------------------------------------
+  % \includegraphics[height=2.2cm]{logo_uner.png}
+  % \hspace{0.6cm}
+
+  {\fontsize{28}{32}\selectfont\bfseries UNER}\\[4pt]
+  {\large Universidad Nacional de Entre Ríos}\\[2pt]
+  {\normalsize Facultad de Ingeniería · Ingeniería Mecatrónica}
+
+  \vspace{2.2cm}
+
+  \color{white!90!azulUNER}
+  {\small\itshape Propuesta de tesis de grado}
+
+  \vspace{0.5cm}
+
+  \color{white}
+  {\fontsize{20}{26}\selectfont\bfseries Análisis Preliminar de\\[4pt]
+  Proyectos de Tesis}
+
+  \vspace{2.5cm}
+
+  % Recuadro de datos
+  \begin{tikzpicture}
+    \node[fill=white, fill opacity=0.15, text opacity=1,
+          rounded corners=6pt, inner sep=14pt, text=white] {
+      \begin{tabular}{rl}
+        \bfseries Integrantes: & Baldoni Martín \quad Mendelevich Tadeo \\[4pt]
+        \bfseries Docentes:    & Terenzano Ignacio \quad Adente Guillermo \\[4pt]
+        \bfseries Fecha:       & \today
+      \end{tabular}
+    };
+  \end{tikzpicture}
+\end{center}
+
+\restoregeometry
+\end{titlepage}
+
+\setcounter{page}{1}
+
+% ---- OBJETIVO ----
+\begin{tcolorbox}[infobox]
+\textbf{Objetivo del documento.}
+Este documento presenta un análisis preliminar de tres posibles proyectos de tesis vinculados con propuestas de la UTEC de Uruguay. El objetivo no es plantear una solución definitiva, sino comprender cada propuesta, su relación con líneas de investigación, el potencial de desarrollo y las principales ventajas y dificultades de cada opción.
+\end{tcolorbox}
+
+\bigskip
+
+% =====================================================
+\section{Proyecto 1 — Simulador de manufactura flexible para Industria 4.0}
+
+\begin{tcolorbox}[infobox]
+\textbf{Idea general.} Diseñar un sistema que simule productos personalizables dentro de una línea de manufactura didáctica (Dolang DCIM-900). Cada producto tendría una configuración propia —tipo, color, recorrido, operaciones— y el sistema mostraría cómo la línea se adapta a cada uno. Abarca conceptos de Industria 4.0, trazabilidad y sistemas ciberfísicos.
+\end{tcolorbox}
+
+\vspace{6pt}
+\textbf{Relación con UTEC.} Se vincula con las líneas de automatización, Industria 4.0 y manufactura flexible. La plataforma educativa sería el vehículo para mostrar cómo una línea automatizada toma decisiones a partir de información digital (PLC, sensores, comunicaciones).
+
+\vspace{6pt}
+\textbf{¿Qué se haría?} Una interfaz para configurar el producto, que luego envía datos al sistema didáctico (por ejemplo, vía RFID, QR o NFC). El sistema ejecutaría distintos recorridos según la configuración, demostrando personalización y trazabilidad a escala didáctica.
+
+\vspace{8pt}
+\begin{multicols}{2}
+\begin{tcolorbox}[probox]
+\begin{itemize}
+  \item Sólida integración de automatización, software, sensores y comunicaciones.
+  \item Fuerte relación con Industria 4.0 y valor educativo elevado.
+  \item División natural entre dos integrantes (software / control).
+  \item Atractivo para presentar en defensa.
+\end{itemize}
+\end{tcolorbox}
+
+\columnbreak
+
+\begin{tcolorbox}[contrabox]
+\begin{itemize}
+  \item Depende del acceso real al sistema Dolang/DCIM-900.
+  \item Documentación limitada puede dificultar la integración.
+  \item Sin el equipo físico, el proyecto pierde sustancia.
+  \item Riesgo de crecer demasiado si se imita un sistema industrial completo.
+\end{itemize}
+\end{tcolorbox}
+\end{multicols}
+
+\begin{tcolorbox}[evalbox]
+Propuesta de alto nivel tecnológico. Su factibilidad depende principalmente de la disponibilidad del equipamiento y los permisos para trabajar sobre él. Requiere confirmar el acceso antes de comprometerse.
+\end{tcolorbox}
+
+\clearpage
+
+% =====================================================
+\section{Proyecto 2 — Monitoreo de cadena de frío en transporte de alimentos}
+
+\begin{tcolorbox}[infobox]
+\textbf{Idea general.} Desarrollar un sistema IoT para monitorear la cadena de frío durante el transporte de alimentos (especialmente cárnicos). El dispositivo registraría temperatura, humedad, ubicación y eventos relevantes del traslado, con alertas en tiempo real y registros para trazabilidad.
+\end{tcolorbox}
+
+\vspace{6pt}
+\textbf{Relación con UTEC.} Se enmarca en las líneas de IIoT, Big Data y supervisión de procesos. Aplica tecnologías de monitoreo remoto a la digitalización del sector agroindustrial uruguayo.
+
+\vspace{6pt}
+\textbf{¿Qué se haría?} Un dispositivo IoT instalado en el vehículo o viajando con la carga, que mida temperatura, humedad y posición GPS y envíe datos a una plataforma web. La plataforma mostraría el recorrido, evolución de variables, alertas y reportes de cada viaje. La validación sería en prueba piloto o condiciones simuladas.
+
+\vspace{8pt}
+\begin{multicols}{2}
+\begin{tcolorbox}[probox]
+\begin{itemize}
+  \item Aplicación real y de alto impacto en la industria alimentaria.
+  \item Integra IoT, sensores, comunicación remota y visualización.
+  \item Sistema escalable con posibilidad comercial.
+  \item Relevancia productiva clara.
+\end{itemize}
+\end{tcolorbox}
+
+\columnbreak
+
+\begin{tcolorbox}[contrabox]
+\begin{itemize}
+  \item Alcance puede volverse excesivo para dos personas.
+  \item Requiere acceso a vehículos o empresas para validar.
+  \item Depende de conectividad, cobertura y autonomía del dispositivo.
+  \item Si se enfoca en la web, puede perder contenido mecatrónico.
+\end{itemize}
+\end{tcolorbox}
+\end{multicols}
+
+\begin{tcolorbox}[evalbox]
+Gran potencial de impacto real, pero debe acotarse con claridad. Lo más viable es un prototipo funcional con validación piloto. El objetivo de cubrir todo el territorio uruguayo excede el alcance de una tesis de dos personas.
+\end{tcolorbox}
+
+\bigskip
+
+% =====================================================
+\section{Proyecto 3 — Fertirrigación automatizada en cultivos bajo invernáculo}
+
+\begin{tcolorbox}[infobox]
+\textbf{Idea general.} Construir un sistema de fertirrigación automatizado a escala de laboratorio para cultivos en invernadero. Mediante sensores de humedad, temperatura, pH y conductividad eléctrica, el sistema controla automáticamente el riego y la dosificación de nutrientes.
+\end{tcolorbox}
+
+\vspace{6pt}
+\textbf{Relación con UTEC.} Se vincula con instrumentación y actuación en sistemas ciberfísicos y con la aplicación tecnológica en el sector agroproductivo: mejor uso del agua, reducción de desperdicios y control preciso del cultivo.
+
+\vspace{6pt}
+\textbf{¿Qué se haría?} Un banco de pruebas con recipientes de cultivo, tanques (agua y nutrientes), bomba, válvulas, sensores y controlador. El sistema mide condiciones y activa riego/dosificación según necesidad, con visualización en un dashboard simple.
+
+\vspace{8pt}
+\begin{multicols}{2}
+\begin{tcolorbox}[probox]
+\begin{itemize}
+  \item Más realizable a escala de laboratorio.
+  \item Fuerte contenido mecatrónico: sensores, actuadores, control, hidráulica.
+  \item No depende de empresas externas.
+  \item Resultados verificables con pruebas reales.
+  \item Fácil de dividir entre dos integrantes.
+\end{itemize}
+\end{tcolorbox}
+
+\columnbreak
+
+\begin{tcolorbox}[contrabox]
+\begin{itemize}
+  \item Puede percibirse como acotado si no se añade una capa tecnológica adicional.
+  \item Los sensores de pH y CE requieren calibración rigurosa.
+  \item Validar resultados agronómicos reales lleva tiempo.
+  \item Hay que evitar prometer optimización completa del cultivo.
+\end{itemize}
+\end{tcolorbox}
+\end{multicols}
+
+\begin{tcolorbox}[evalbox]
+La opción más viable para dos integrantes. Puede verse más acotada, pero tiene la ventaja de que se construye, se prueba y se defiende con resultados concretos. Agregar una extensión tecnológica —como un gemelo digital básico— eleva significativamente el nivel del trabajo.
+\end{tcolorbox}
+
+\clearpage
+
+% =====================================================
+\section{Comparación general}
+
+\renewcommand{\arraystretch}{1.45}
+\begin{tabularx}{\textwidth}{>{\bfseries\small}p{3.3cm} X X X}
+\toprule
+\rowcolor{azulUNER}
+\color{white}Criterio &
+\color{white}\centering\textbf{Proy. 1 – Industria 4.0} &
+\color{white}\centering\textbf{Proy. 2 – Cadena de frío} &
+\color{white}\centering\arraybackslash\textbf{Proy. 3 – Fertirrigación} \\
+\midrule
+\rowcolor{grisClaro}
+Dificultad & Media-alta & Alta & Media \\
+Dependencia externa & Alta & Alta & Baja-media \\
+\rowcolor{grisClaro}
+Factibilidad (2 personas) & Buena (con acceso al equipo) & Buena (si se acota) & Muy buena \\
+Riesgo principal & Sin acceso al Dolang & Alcance desmedido & Que quede demasiado simple \\
+\rowcolor{grisClaro}
+Potencial de ampliación & Alto & Alto & Alto \\
+\bottomrule
+\end{tabularx}
+
+\bigskip
+
+% =====================================================
+\section{Ampliación propuesta: Fertirrigación + Gemelo Digital}
+
+\begin{tcolorbox}[extbox]
+
+\begin{center}
+\large\bfseries\color{azulAccento}
+Sistema de fertirrigación automatizado con gemelo digital básico\\
+para asistencia en la toma de decisiones en cultivos bajo invernáculo
+\end{center}
+
+\vspace{8pt}
+\textbf{¿Por qué esta combinación?}
+Agregar un gemelo digital al proyecto de fertirrigación lo transforma de un sistema de riego automático en una plataforma de monitoreo, análisis y recomendación. El resultado es más completo sin ser irrealizable.
+
+\vspace{8pt}
+
+\begin{multicols}{2}
+\textbf{Variables representadas en el gemelo:}
+\begin{itemize}
+  \item Humedad del suelo/sustrato
+  \item Temperatura y humedad ambiente
+  \item pH de la solución
+  \item Conductividad eléctrica
+  \item Volumen de agua aplicado
+  \item Estado de bomba y válvulas
+  \item Historial de riegos y alertas
+\end{itemize}
+
+\columnbreak
+
+\textbf{Funciones de predicción y recomendación:}
+\begin{itemize}
+  \item Estimación del próximo riego necesario
+  \item Comparación con receta esperada
+  \item Simulación de escenarios de riego
+  \item Detección de tendencias anómalas
+  \item Recomendaciones básicas: regar, esperar, corregir pH, revisar nutrientes
+\end{itemize}
+\end{multicols}
+
+\vspace{8pt}
+\textbf{Arquitectura (edge/fog computing):}
+
+\vspace{4pt}
+\begin{center}
+\begin{tikzpicture}[
+  every node/.style={rounded corners=4pt, font=\small},
+  box/.style={draw=azulUNER, fill=fondo1, minimum width=2.5cm, minimum height=0.75cm, text centered, align=center, inner sep=4pt},
+  arrow/.style={->, thick, color=azulClaro}
+]
+  \node[box] (s) {Sensores y\\actuadores};
+  \node[box, right=1.2cm of s] (c) {Controlador\\local};
+  \node[box, right=1.2cm of c] (d) {Dashboard /\\Gemelo digital};
+  \node[box, right=1.2cm of d] (n) {Nube\\(opcional)};
+  \draw[arrow] (s) -- (c);
+  \draw[arrow] (c) -- (d);
+  \draw[arrow] (d) -- (n);
+  \draw[arrow] (c) -- ++(0,-0.8) -| (s);
+\end{tikzpicture}
+\end{center}
+
+\vspace{8pt}
+\textbf{Límites recomendados} (para mantener el proyecto viable):
+\begin{itemize}
+  \item No modelar la fisiología completa de la planta ni predecir rendimiento comercial.
+  \item No implementar IA avanzada como objetivo principal.
+  \item No controlar múltiples nutrientes por separado desde el inicio.
+  \item No escalar a un invernadero industrial real.
+\end{itemize}
+
+\vspace{4pt}
+\textbf{Lo que sí es viable construir:} banco de fertirrigación funcional · medición de variables críticas · control automático básico · registro histórico · dashboard con gemelo digital · recomendaciones y predicciones simples.
+
+\end{tcolorbox}
+
+\bigskip
+
+% =====================================================
+\section*{Fuentes consultadas}
+
+{\small
+\begin{itemize}[leftmargin=1cm, itemsep=3pt]
+  \item UTEC – Tecnologías Emergentes para la Industria Inteligente:\
+    \url{https://utec.edu.uy/es/investigacion/gruposde-investigacion/grupo-de-investigacion-en-tecnologias-emergentes-para-la-industria-inteligente/}
+
+  \item UTEC – Sistemas Inteligentes y Ciberfísicos Aplicados:\
+    \url{https://utec.edu.uy/es/investigacion/gruposde-investigacion/grupo-de-investigacion-en-sistemas-inteligentes-y-ciberfisicos-aplicados/}
+
+  \item Dolang Didactic – DLMPS-900A Modular Flexible Manufacturing System:\
+    \url{https://www.didactic-dolang.com/product-14-6-modular-flexible-trainer-en/}
+
+  \item INAC – Estatuto de distribución de carnes y derivados:\
+    \url{https://www.inac.uy/innovaportal/file/27611/1/estatuto-vehiculos---oct-2025.pdf}
+
+  \item INIA Uruguay – Manejo eficiente de la fertirrigación en tomate bajo invernáculo:\
+    \url{https://www.inia.uy/sites/default/files/publications/2025-03/st-270-2024.pdf}
+
+  \item INIA Uruguay – Monitoreo de nutrientes en solución de suelo para tomate:\
+    \url{https://inia.uy/tecnologias/monitoreo-de-nutrientes-en-solucion-de-suelo-ajustado-para-tomate-en-uruguay}
+\end{itemize}
+}
+
+\end{document}

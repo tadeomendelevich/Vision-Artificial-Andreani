@@ -1,0 +1,9 @@
+.claude/
+.env
+Untitled-2.aux
+Untitled-2.log
+Untitled-2.out
+barcodes_detectados.csv
+frame_*.png
+__pycache__/
+*.pyc
